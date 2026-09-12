@@ -1,12 +1,12 @@
-# 🎵 TERMINAL APPLICATION — Music Terminal
+# 🎵 TuneShell — Music Terminal
 
 > A modern, aesthetic CLI music player built with **React Ink** and **Node.js** — play your MP3 library right from the terminal with a beautiful, animated interface.
 
 ---
 
-## ✨ What is TERMINAL APPLICATION?
+## ✨ What is TuneShell?
 
-TERMINAL APPLICATION (Music Terminal) is a terminal-based music player that brings a premium UI experience directly to your command line. Instead of a plain text interface, TERMINAL APPLICATION renders a rich, colorful, split-screen layout using [React Ink](https://github.com/vadimdemedes/ink) — the React renderer for the terminal.
+TuneShell is a terminal-based music player that brings a premium UI experience directly to your command line. Instead of a plain text interface, TuneShell renders a rich, colorful, split-screen layout using [React Ink](https://github.com/vadimdemedes/ink) — the React renderer for the terminal.
 
 Key highlights:
 - **Split-screen layout** — Playlist on the left, animated visualizer on the right
@@ -19,9 +19,9 @@ Key highlights:
 
 ## 🖥️ Interface Overview
 
-![TERMINAL APPLICATION Music Terminal — interface screenshot](assets/app_screenshot.png)
+![TuneShell Music Terminal — interface screenshot](assets/TuneShellUI.png)
 
-<!-- If the image above doesn't render, open a terminal in the project root and run: open assets/app_screenshot.png -->
+<!-- If the image above doesn't render, open a terminal in the project root and run: open assets/TuneShell.png -->
 
 ### Left Panel — Playlist
 - Lists all `.mp3` files found in the `Songs/` directory
@@ -40,22 +40,20 @@ Key highlights:
 ## ⚙️ How It Works
 
 ### Audio Engine
-TERMINAL APPLICATION uses macOS's native `afplay` command (via Node's `child_process.spawn`) to play audio. This means:
+TuneShell uses macOS's native `afplay` command (via Node's `child_process.spawn`) to play audio. This means:
 - **No third-party audio library** is needed
 - Audio is played in a **separate child process**
 - On stop, the child process receives `SIGKILL`
 - On pause, the child process receives `SIGSTOP`; on resume, `SIGCONT`
 
-When a track finishes naturally (exit code `0`), TERMINAL APPLICATION automatically advances to the next track in the playlist (looping back to the first track after the last).
+When a track finishes naturally (exit code `0`), TuneShell automatically advances to the next track in the playlist (looping back to the first track after the last).
 
 ### Song Metadata Parsing
-Filenames are parsed to extract **Artist** and **Title**. TERMINAL APPLICATION expects files in the format:
+Filenames are parsed to extract **Artist** and **Title**. TuneShell expects files in the format:
 
-```
 
 Artist Name - Song Title.mp3
 
-````
 
 Common suffixes like `(Official Video)`, `(Lyrics)`, `| Official Music Video`, and `ft. ...` are automatically stripped for a clean display.
 
@@ -65,16 +63,16 @@ Song duration is read using macOS's `afinfo` utility, which queries the audio fi
 The Celestial Disc is driven by a `frameIndex` state variable that increments every **220ms** via `setInterval`. Each frame cycles through a pre-defined set of zodiac and celestial glyphs (`ZODIAC_SECTORS`) arranged in rotating ring patterns to simulate a spinning disc. The animation starts when playback begins and stops (freezes) when paused or stopped.
 
 ### React Ink Architecture
-The entire UI is a single React functional component — `MuseTerminalApp` — rendered via Ink's `render()`. Key state:
+The entire UI is a single React functional component — `TuneShellTerminalApp` — rendered via Ink's `render()`. Key state:
 
-| State             | Description                                      |
-|-------------------|--------------------------------------------------|
-| `songs`           | Parsed list of all MP3 tracks                    |
-| `selectedIndex`   | Currently highlighted row in the playlist        |
-| `currentSongIndex`| Index of the track currently being played        |
-| `playbackStatus`  | `'PLAYING'`, `'PAUSED'`, or `'STOPPED'`          |
-| `frameIndex`      | Current animation frame for the disc visualizer  |
-| `elapsedSeconds`  | Seconds elapsed since current track started      |
+| State              | Description                                      |
+|--------------------|--------------------------------------------------|
+| `songs`            | Parsed list of all MP3 tracks                    |
+| `selectedIndex`    | Currently highlighted row in the playlist        |
+| `currentSongIndex` | Index of the track currently being played        |
+| `playbackStatus`   | `'PLAYING'`, `'PAUSED'`, or `'STOPPED'`          |
+| `frameIndex`       | Current animation frame for the disc visualizer  |
+| `elapsedSeconds`   | Seconds elapsed since current track started      |
 
 Keyboard input is handled via Ink's `useInput` hook.
 
@@ -90,53 +88,50 @@ Keyboard input is handled via Ink's `useInput` hook.
 ### Installation
 
 1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/sarthakcontrigit/Terminal-Application.git
-   cd Terminal-Application
-````
+
+   git clone https://github.com/sarthakcontrigit/TuneShell.git
+   cd TuneShell
+
 
 2. **Install dependencies:**
 
-   ```bash
    npm install
-   ```
+
 
 3. **Add your music:**
-
-   * Create a `Songs/` directory in the project root (if it doesn't exist)
-   * Drop your `.mp3` files into it
-   * For best results, name them in the format: `Artist - Song Title.mp3`
+   - Create a `Songs/` directory in the project root (if it doesn't exist)
+   - Drop your `.mp3` files into it
+   - For best results, name them in the format: `Artist - Song Title.mp3`
 
 4. **Run the player:**
 
-   ```bash
    npm start
    # or directly:
-   node musicPlayer.js
-   ```
+   node tuneshell.js
+ 
 
 ---
 
 ## ⌨️ Keyboard Controls
 
-| Key             | Action                        |
-| --------------- | ----------------------------- |
-| `↑` / `↓`       | Navigate up/down the playlist |
-| `Enter`         | Play the selected track       |
-| `Space` or `P`  | Toggle play / pause           |
-| `N`             | Skip to the next track        |
-| `B`             | Go back to the previous track |
-| `S`             | Stop playback                 |
-| `Q` or `Ctrl+C` | Quit the application          |
+| Key                | Action                              |
+|--------------------|-------------------------------------|
+| `↑` / `↓`          | Navigate up/down the playlist       |
+| `Enter`            | Play the selected track             |
+| `Space` or `P`     | Toggle play / pause                 |
+| `N`                | Skip to the next track              |
+| `B`                | Go back to the previous track       |
+| `S`                 | Stop playback                       |
+| `Q` or `Ctrl+C`    | Quit the application                |
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 Terminal-Application/
 ├── Songs/              # Place your .mp3 files here
-├── musicPlayer.js      # Main application (React Ink UI + audio engine)
+├── tuneshell.js        # Main application (React Ink UI + audio engine)
 ├── package.json        # Project config and dependencies
 └── README.md           # You are here
 ```
@@ -145,10 +140,10 @@ Terminal-Application/
 
 ## 📦 Dependencies
 
-| Package | Version   | Purpose                              |
-| ------- | --------- | ------------------------------------ |
-| `ink`   | `^7.1.1`  | React renderer for the terminal      |
-| `react` | `^19.3.0` | Component model and state management |
+| Package   | Version   | Purpose                                       |
+|-----------|-----------|-----------------------------------------------|
+| `ink`     | `^7.1.1`  | React renderer for the terminal               |
+| `react`   | `^19.3.0` | Component model and state management          |
 
 > **Note:** `afplay` and `afinfo` are macOS system utilities and do not require installation.
 
@@ -156,24 +151,21 @@ Terminal-Application/
 
 ## 🎨 Design Philosophy
 
-TERMINAL APPLICATION is built around the idea that a terminal application doesn't have to look boring. It uses:
-
-* **Block-font ASCII art** for the TERMINAL APPLICATION header logo
-* **Neon/cyberpunk color palette** (cyan, violet, pink, sky blue)
-* **Animated zodiac disc** as a visual representation of music playing
-* **Bold typography** throughout for readability and style
+TuneShell is built around the idea that a terminal application doesn't have to look boring. It uses:
+- **Block-font ASCII art** for the TuneShell header logo
+- **Neon/cyberpunk color palette** (cyan, violet, pink, sky blue)
+- **Animated zodiac disc** as a visual representation of music playing
+- **Bold typography** throughout for readability and style
 
 ---
 
 ## ⚠️ Known Limitations
 
-* **macOS only** — `afplay` is not available on Linux or Windows
-* **MP3 only** — only `.mp3` files are scanned from the `Songs/` directory
-* **No seeking** — you cannot jump to a specific point in a track
-* **Terminal width** — the UI is optimized for a terminal width of ~110 characters; smaller terminals may cause layout issues
+- **macOS only** — `afplay` is not available on Linux or Windows
+- **MP3 only** — only `.mp3` files are scanned from the `Songs/` directory
+- **No seeking** — you cannot jump to a specific point in a track
+- **Terminal width** — the UI is optimized for a terminal width of ~110 characters; smaller terminals may cause layout issues
 
 ---
 
 *Built with ♫ using React Ink and Node.js*
-
-
