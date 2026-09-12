@@ -30,6 +30,7 @@ const cleanSongName = (filename) => {
       filename,
     };
   }
+
   return {
     artist: 'Unknown Artist',
     title: cleanName,
@@ -40,8 +41,10 @@ const cleanSongName = (filename) => {
 // Format seconds into M:SS
 const formatTime = (totalSec) => {
   if (!totalSec || isNaN(totalSec) || totalSec < 0) return '0:00';
+
   const mins = Math.floor(totalSec / 60);
   const secs = Math.floor(totalSec % 60);
+
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
@@ -49,22 +52,39 @@ const formatTime = (totalSec) => {
 const getSongDuration = (filename) => {
   try {
     const fullPath = path.join(songDirectory, filename);
-    const output = execSync(`afinfo "${fullPath}"`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
-    const match = output.match(/estimated duration:\s*([\d.]+)\s*sec/i);
+
+    const output = execSync(
+      `afinfo "${fullPath}"`,
+      {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'ignore'],
+      }
+    );
+
+    const match = output.match(
+      /estimated duration:\s*([\d.]+)\s*sec/i
+    );
+
     if (match && match[1]) {
       return parseFloat(match[1]);
     }
   } catch (e) {}
-  return 240; // Default fallback
+
+  return 240;
 };
 
 // Load and parse songs list
 const loadSongs = () => {
   if (!fs.existsSync(songDirectory)) return [];
-  const files = fs.readdirSync(songDirectory).filter((f) => f.toLowerCase().endsWith('.mp3'));
+
+  const files = fs
+    .readdirSync(songDirectory)
+    .filter((f) => f.toLowerCase().endsWith('.mp3'));
+
   return files.map((file) => {
     const parsed = cleanSongName(file);
     const durationSec = getSongDuration(file);
+
     return {
       ...parsed,
       durationSec,
@@ -78,7 +98,7 @@ const ZODIAC_SECTORS = [
   ['🪐', '✧', '☽', '✦', '☼', '⋆', '♈', '♉', '♊', '♋', '♌', '♍'],
   ['✧', '☽', '✦', '☼', '⋆', '♈', '♉', '♊', '♋', '♌', '♍', '🪐'],
   ['☽', '✦', '☼', '⋆', '♈', '♉', '♊', '♋', '♌', '♍', '🪐', '✧'],
-  ['✦', '☼', '⋆', '♈', '♉', '♊', '♋', '♌', '♍', '🪐', '✧', '☽'],
+  ['✦', '☼', '⋆', '♈', '♉', '♊', '♌', '♍', '🪐', '✧', '☽', '✦'],
   ['☼', '⋆', '♈', '♉', '♊', '♋', '♌', '♍', '🪐', '✧', '☽', '✦'],
   ['⋆', '♈', '♉', '♊', '♋', '♌', '♍', '🪐', '✧', '☽', '✦', '☼'],
   ['♈', '♉', '♊', '♋', '♌', '♍', '🪐', '✧', '☽', '✦', '☼', '⋆'],
@@ -91,7 +111,9 @@ const ZODIAC_SECTORS = [
 
 // Rotating Celestial Disc Component
 const CelestialDisc = ({ isPlaying, frameIndex }) => {
-  const g = ZODIAC_SECTORS[frameIndex % ZODIAC_SECTORS.length];
+  const g = ZODIAC_SECTORS[
+    frameIndex % ZODIAC_SECTORS.length
+  ];
 
   const discLines = [
     { text: `        .·:''""'':·.        `, color: '#00f5d4' },
@@ -107,7 +129,11 @@ const CelestialDisc = ({ isPlaying, frameIndex }) => {
 
   return h(
     Box,
-    { flexDirection: 'column', alignItems: 'center', marginY: 1 },
+    {
+      flexDirection: 'column',
+      alignItems: 'center',
+      marginY: 1,
+    },
     discLines.map((line, idx) =>
       h(
         Text,
@@ -122,13 +148,14 @@ const CelestialDisc = ({ isPlaying, frameIndex }) => {
   );
 };
 
-// Main Muse Terminal App Component
-const MuseTerminalApp = () => {
+// Main TuneShell Terminal App Component
+const TuneShellTerminalApp = () => {
   const { exit } = useApp();
+
   const [songs] = useState(() => loadSongs());
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
-  const [playbackStatus, setPlaybackStatus] = useState('STOPPED'); // 'PLAYING' | 'PAUSED' | 'STOPPED'
+  const [playbackStatus, setPlaybackStatus] = useState('STOPPED');
   const [frameIndex, setFrameIndex] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
@@ -152,14 +179,16 @@ const MuseTerminalApp = () => {
     };
   }, []);
 
-  // Disc rotation and progress timer (Smooth 220ms rotation)
+  // Disc rotation and progress timer
   useEffect(() => {
     let animTimer = null;
     let tickTimer = null;
 
     if (playbackStatus === 'PLAYING') {
       animTimer = setInterval(() => {
-        setFrameIndex((prev) => (prev + 1) % ZODIAC_SECTORS.length);
+        setFrameIndex(
+          (prev) => (prev + 1) % ZODIAC_SECTORS.length
+        );
       }, 220);
 
       tickTimer = setInterval(() => {
@@ -179,6 +208,7 @@ const MuseTerminalApp = () => {
       try {
         audioProcessRef.current.kill('SIGKILL');
       } catch (e) {}
+
       audioProcessRef.current = null;
     }
   };
@@ -192,7 +222,9 @@ const MuseTerminalApp = () => {
     const songPath = path.join(songDirectory, song.filename);
 
     const proc = spawn('afplay', [songPath]);
+
     audioProcessRef.current = proc;
+
     setCurrentSongIndex(index);
     setPlaybackStatus('PLAYING');
     setElapsedSeconds(0);
@@ -201,8 +233,12 @@ const MuseTerminalApp = () => {
     proc.on('close', (code) => {
       if (audioProcessRef.current === proc) {
         audioProcessRef.current = null;
+
         if (code === 0) {
-          const nextIndex = (currentSongIndexRef.current + 1) % songsRef.current.length;
+          const nextIndex =
+            (currentSongIndexRef.current + 1) %
+            songsRef.current.length;
+
           playTrack(nextIndex);
         } else {
           setPlaybackStatus('STOPPED');
@@ -212,18 +248,32 @@ const MuseTerminalApp = () => {
   };
 
   const pauseTrack = () => {
-    if (audioProcessRef.current && playbackStatus === 'PLAYING') {
+    if (
+      audioProcessRef.current &&
+      playbackStatus === 'PLAYING'
+    ) {
       try {
-        process.kill(audioProcessRef.current.pid, 'SIGSTOP');
+        process.kill(
+          audioProcessRef.current.pid,
+          'SIGSTOP'
+        );
+
         setPlaybackStatus('PAUSED');
       } catch (e) {}
     }
   };
 
   const resumeTrack = () => {
-    if (audioProcessRef.current && playbackStatus === 'PAUSED') {
+    if (
+      audioProcessRef.current &&
+      playbackStatus === 'PAUSED'
+    ) {
       try {
-        process.kill(audioProcessRef.current.pid, 'SIGCONT');
+        process.kill(
+          audioProcessRef.current.pid,
+          'SIGCONT'
+        );
+
         setPlaybackStatus('PLAYING');
       } catch (e) {}
     }
@@ -241,39 +291,57 @@ const MuseTerminalApp = () => {
 
   const nextTrack = () => {
     if (songs.length === 0) return;
+
     const nextIdx =
       currentSongIndex !== null
         ? (currentSongIndex + 1) % songs.length
         : (selectedIndex + 1) % songs.length;
+
     setSelectedIndex(nextIdx);
     playTrack(nextIdx);
   };
 
   const prevTrack = () => {
     if (songs.length === 0) return;
+
     const prevIdx =
       currentSongIndex !== null
-        ? (currentSongIndex - 1 + songs.length) % songs.length
-        : (selectedIndex - 1 + songs.length) % songs.length;
+        ? (currentSongIndex - 1 + songs.length) %
+          songs.length
+        : (selectedIndex - 1 + songs.length) %
+          songs.length;
+
     setSelectedIndex(prevIdx);
     playTrack(prevIdx);
   };
 
   // Keyboard Navigation
   useInput((input, key) => {
-    if ((key.ctrl && input === 'c') || input === 'q' || input === 'Q') {
+    if (
+      (key.ctrl && input === 'c') ||
+      input === 'q' ||
+      input === 'Q'
+    ) {
       stopAudio();
       exit();
       return;
     }
 
     if (key.upArrow) {
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : songs.length - 1));
+      setSelectedIndex((prev) =>
+        prev > 0 ? prev - 1 : songs.length - 1
+      );
     } else if (key.downArrow) {
-      setSelectedIndex((prev) => (prev < songs.length - 1 ? prev + 1 : 0));
+      setSelectedIndex((prev) =>
+        prev < songs.length - 1 ? prev + 1 : 0
+      );
     } else if (key.return) {
       playTrack(selectedIndex);
-    } else if (input === ' ' || input === 'p' || input === 'P') {
+    } else if (
+      input === ' ' ||
+      input === 'p' ||
+      input === 'P'
+    ) {
       togglePlayPause();
     } else if (input === 'n' || input === 'N') {
       nextTrack();
@@ -286,16 +354,40 @@ const MuseTerminalApp = () => {
   });
 
   // Current Playing Track
-  const activeTrack = currentSongIndex !== null ? songs[currentSongIndex] : null;
-  const currentDuration = activeTrack ? activeTrack.durationSec : 0;
-  const progressRatio = currentDuration > 0 ? Math.min(1, elapsedSeconds / currentDuration) : 0;
+  const activeTrack =
+    currentSongIndex !== null
+      ? songs[currentSongIndex]
+      : null;
+
+  const currentDuration = activeTrack
+    ? activeTrack.durationSec
+    : 0;
+
+  const progressRatio =
+    currentDuration > 0
+      ? Math.min(
+          1,
+          elapsedSeconds / currentDuration
+        )
+      : 0;
 
   // Render Timeline Progress Bar
   const barWidth = 32;
-  const filledChars = Math.round(progressRatio * barWidth);
-  const emptyChars = Math.max(0, barWidth - filledChars);
-  const progressBarFilled = '━'.repeat(filledChars);
-  const progressBarEmpty = '─'.repeat(emptyChars);
+
+  const filledChars = Math.round(
+    progressRatio * barWidth
+  );
+
+  const emptyChars = Math.max(
+    0,
+    barWidth - filledChars
+  );
+
+  const progressBarFilled =
+    '━'.repeat(filledChars);
+
+  const progressBarEmpty =
+    '─'.repeat(emptyChars);
 
   return h(
     Box,
@@ -307,55 +399,61 @@ const MuseTerminalApp = () => {
       paddingY: 1,
       width: 108,
     },
-    // Big Styled MUSE Header
+
+    // Big Styled TuneShell Header
+// Big Styled TuneShell Header
+h(
+  Box,
+  {
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottom: true,
+    borderColor: '#334155',
+    paddingBottom: 1,
+    marginBottom: 1,
+  },
+  h(
+    Box,
+    { flexDirection: 'row', alignItems: 'center' },
+    h(Text, { color: '#00f5d4', bold: true }, '♫  '),
     h(
       Box,
-      {
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottom: true,
-        borderColor: '#334155',
-        paddingBottom: 1,
-        marginBottom: 1,
-      },
+      { flexDirection: 'column' },
       h(
-        Box,
-        { flexDirection: 'row', alignItems: 'center' },
-        h(Text, { color: '#00f5d4', bold: true }, '♫  '),
-        h(
-          Box,
-          { flexDirection: 'column' },
-          h(
-            Text,
-            { color: '#00f5d4', bold: true },
-            '█▀▄▀█ █░█ █▀▀ █▀▀'
-          ),
-          h(
-            Text,
-            { color: '#38bdf8', bold: true },
-            '█░▀░█ █▄█ ▄██ ██▄'
-          )
-        ),
-        h(
-          Box,
-          { marginLeft: 2 },
-          h(Text, { color: '#a78bfa', bold: true }, ' / '),
-          h(Text, { color: '#f472b6', bold: true }, 'music terminal')
-        )
+        Text,
+        { color: '#f53d00ff', bold: true },
+        '█▀▀▀█ █░█ █▄░█ █▀▀   █▀▀ █░█ █▀▀ █░░ █░░'
       ),
       h(
-        Box,
-        {},
-        h(Text, { color: '#00f5d4', bold: true }, '● '),
-        h(Text, { color: '#38bdf8', bold: true }, '● '),
-        h(Text, { color: '#f472b6', bold: true }, '●')
+        Text,
+        { color: '#f8a838ff', bold: true },
+        '░░█░░ █▄█ █░▀█ █▄▄   ▄██ █▄█ █▄▄ █▄▄ █▄▄'
       )
     ),
+    h(
+      Box,
+      { marginLeft: 2 },
+      h(Text, { color: '#a78bfa', bold: true }, ' / '),
+      h(Text, { color: '#f472b6', bold: true }, 'music terminal')
+    )
+  ),
+  h(
+    Box,
+    {},
+    h(Text, { color: '#00f5d4', bold: true }, '● '),
+    h(Text, { color: '#38bdf8', bold: true }, '● '),
+    h(Text, { color: '#f472b6', bold: true }, '●')
+  )
+),
 
     // Main 2-Column Body
     h(
       Box,
-      { flexDirection: 'row', minHeight: 18 },
+      {
+        flexDirection: 'row',
+        minHeight: 18,
+      },
+
       // Left Column: Playlist Tracklist Table
       h(
         Box,
@@ -366,55 +464,156 @@ const MuseTerminalApp = () => {
           borderRight: true,
           borderColor: '#334155',
         },
+
         h(
           Box,
-          { marginBottom: 1 },
-          h(Text, { color: '#00f5d4', bold: true }, '▶  '),
-          h(Text, { color: '#38bdf8', bold: true }, 'Playlist')
+          {
+            marginBottom: 1,
+          },
+
+          h(
+            Text,
+            {
+              color: '#00f5d4',
+              bold: true,
+            },
+            '▶  '
+          ),
+
+          h(
+            Text,
+            {
+              color: '#38bdf8',
+              bold: true,
+            },
+            'Playlist'
+          )
         ),
+
         h(
           Box,
-          { marginBottom: 1 },
-          h(Text, { color: '#a78bfa', bold: true }, '  #   '),
-          h(Text, { color: '#38bdf8', bold: true }, 'Title'.padEnd(26)),
-          h(Text, { color: '#f472b6', bold: true }, 'Artist')
+          {
+            marginBottom: 1,
+          },
+
+          h(
+            Text,
+            {
+              color: '#a78bfa',
+              bold: true,
+            },
+            '  #   '
+          ),
+
+          h(
+            Text,
+            {
+              color: '#38bdf8',
+              bold: true,
+            },
+            'Title'.padEnd(26)
+          ),
+
+          h(
+            Text,
+            {
+              color: '#f472b6',
+              bold: true,
+            },
+            'Artist'
+          )
         ),
 
         songs.length === 0
-          ? h(Text, { color: '#ef4444', bold: true }, 'No .mp3 tracks in Songs/ directory')
+          ? h(
+              Text,
+              {
+                color: '#ef4444',
+                bold: true,
+              },
+              'No .mp3 tracks in Songs/ directory'
+            )
           : songs.map((song, idx) => {
-              const isSelected = idx === selectedIndex;
-              const isPlaying = idx === currentSongIndex;
+              const isSelected =
+                idx === selectedIndex;
 
-              const pointer = isSelected ? '> ' : '  ';
-              const num = (idx + 1).toString().padEnd(4);
-              const titleTrunc = song.title.length > 24 ? song.title.substring(0, 22) + '..' : song.title;
-              const artistTrunc = song.artist.length > 20 ? song.artist.substring(0, 18) + '..' : song.artist;
+              const isPlaying =
+                idx === currentSongIndex;
 
-              const titleColor = isSelected ? '#00f5d4' : isPlaying ? '#38bdf8' : '#ffffff';
-              const artistColor = isSelected ? '#fde047' : isPlaying ? '#f472b6' : '#cbd5e1';
+              const pointer = isSelected
+                ? '> '
+                : '  ';
+
+              const num = (idx + 1)
+                .toString()
+                .padEnd(4);
+
+              const titleTrunc =
+                song.title.length > 24
+                  ? song.title.substring(0, 22) + '..'
+                  : song.title;
+
+              const artistTrunc =
+                song.artist.length > 20
+                  ? song.artist.substring(0, 18) + '..'
+                  : song.artist;
+
+              const titleColor = isSelected
+                ? '#00f5d4'
+                : isPlaying
+                ? '#38bdf8'
+                : '#ffffff';
+
+              const artistColor = isSelected
+                ? '#fde047'
+                : isPlaying
+                ? '#f472b6'
+                : '#cbd5e1';
 
               return h(
                 Box,
-                { key: song.filename, marginY: 0 },
+                {
+                  key: song.filename,
+                  marginY: 0,
+                },
+
                 h(
                   Text,
-                  { color: isSelected ? '#00f5d4' : '#64748b', bold: true },
+                  {
+                    color: isSelected
+                      ? '#00f5d4'
+                      : '#64748b',
+                    bold: true,
+                  },
                   pointer
                 ),
+
                 h(
                   Text,
-                  { color: isSelected ? '#38bdf8' : '#a78bfa', bold: true },
+                  {
+                    color: isSelected
+                      ? '#38bdf8'
+                      : '#a78bfa',
+                    bold: true,
+                  },
                   num
                 ),
+
                 h(
                   Text,
-                  { color: titleColor, bold: true },
+                  {
+                    color: titleColor,
+                    bold: true,
+                  },
                   titleTrunc.padEnd(26)
                 ),
+
                 h(
                   Text,
-                  { color: artistColor, bold: true },
+                  {
+                    color: artistColor,
+                    bold: true,
+                  },
                   artistTrunc
                 )
               );
@@ -423,15 +622,26 @@ const MuseTerminalApp = () => {
         // Left Footer
         h(
           Box,
-          { marginTop: 'auto', paddingTop: 2 },
+          {
+            marginTop: 'auto',
+            paddingTop: 2,
+          },
+
           h(
             Text,
-            { color: '#38bdf8', bold: true },
+            {
+              color: '#38bdf8',
+              bold: true,
+            },
             '♫ '
           ),
+
           h(
             Text,
-            { color: '#94a3b8', bold: true },
+            {
+              color: '#94a3b8',
+              bold: true,
+            },
             `${songs.length} tracks loaded`
           )
         )
@@ -445,26 +655,50 @@ const MuseTerminalApp = () => {
           width: 50,
           paddingLeft: 3,
         },
+
         // Now Playing Header
         h(
           Box,
-          { flexDirection: 'column' },
-          h(Text, { color: '#a78bfa', bold: true }, 'Now Playing'),
+          {
+            flexDirection: 'column',
+          },
+
           h(
             Text,
-            { color: '#ffffff', bold: true },
-            activeTrack ? activeTrack.title : 'No track playing'
+            {
+              color: '#a78bfa',
+              bold: true,
+            },
+            'Now Playing'
           ),
+
           h(
             Text,
-            { color: '#f472b6', bold: true },
-            activeTrack ? activeTrack.artist : 'Select a song to start'
+            {
+              color: '#ffffff',
+              bold: true,
+            },
+            activeTrack
+              ? activeTrack.title
+              : 'No track playing'
+          ),
+
+          h(
+            Text,
+            {
+              color: '#f472b6',
+              bold: true,
+            },
+            activeTrack
+              ? activeTrack.artist
+              : 'Select a song to start'
           )
         ),
 
         // Center Rotating Celestial Zodiac Disc
         h(CelestialDisc, {
-          isPlaying: playbackStatus === 'PLAYING',
+          isPlaying:
+            playbackStatus === 'PLAYING',
           frameIndex,
         }),
 
@@ -477,21 +711,50 @@ const MuseTerminalApp = () => {
             justifyContent: 'space-between',
             marginTop: 1,
           },
+
           h(
             Text,
-            { color: '#00f5d4', bold: true },
+            {
+              color: '#00f5d4',
+              bold: true,
+            },
             formatTime(elapsedSeconds)
           ),
+
           h(
             Box,
-            { marginX: 1 },
-            h(Text, { color: '#38bdf8', bold: true }, progressBarFilled),
-            h(Text, { color: '#334155', bold: true }, progressBarEmpty)
+            {
+              marginX: 1,
+            },
+
+            h(
+              Text,
+              {
+                color: '#38bdf8',
+                bold: true,
+              },
+              progressBarFilled
+            ),
+
+            h(
+              Text,
+              {
+                color: '#334155',
+                bold: true,
+              },
+              progressBarEmpty
+            )
           ),
+
           h(
             Text,
-            { color: '#c084fc', bold: true },
-            activeTrack ? activeTrack.durationFormatted : '0:00'
+            {
+              color: '#c084fc',
+              bold: true,
+            },
+            activeTrack
+              ? activeTrack.durationFormatted
+              : '0:00'
           )
         )
       )
@@ -499,4 +762,4 @@ const MuseTerminalApp = () => {
   );
 };
 
-render(React.createElement(MuseTerminalApp));
+render(React.createElement(TuneShellTerminalApp));
