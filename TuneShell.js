@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 
 const songDirectory = path.join(__dirname, "Songs");
 const songs = fs.readdirSync(songDirectory).filter(song => song.toLowerCase().endsWith(".mp3"));
@@ -37,3 +38,27 @@ if(songs.length === 0){
 }else{
     showSongs(songs);
 };
+
+readline.emitKeypressEvents(process.stdin);
+if(process.stdin.isTTY){
+    process.stdin.setRawMode(true);
+};
+process.stdin.resume();
+
+process.stdin.on('keypress', (str, key)=>{
+    if((key.ctrl && key.name === "c") || key.name==="q"){
+        process.exit();
+    };
+    if(key.name === "up"){
+        if(selectedIndex > 0){
+            selectedIndex--;
+            showSongs(songs);
+        };
+    };
+    if(key.name==="down"){
+        if(selectedIndex < songs.length -1 ){
+            selectedIndex++;
+            showSongs(songs);
+        };
+    };
+});
