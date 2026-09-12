@@ -38,13 +38,11 @@ function showSongs(songs){
 function playSong(song){
     if(currentAudioPlaying){
         currentAudioPlaying.kill();
-    } else{
-        const songPath = path.join(songDirectory, song);
-        currentAudioPlaying = spawn('afplay', [songPath]);
-        currentSongPlaying = song;
-    };
+    }
+    const songPath = path.join(songDirectory, song);
+    currentAudioPlaying = spawn('afplay', [songPath]);
+    currentSongPlaying = song;
 
-};
 
 
 if(songs.length === 0){
@@ -82,4 +80,25 @@ process.stdin.on('keypress', (str, key)=>{
         playSong(songs[selectedIndex]);
         showSongs(songs);
     };
-});
+        if(key.name === 'n'){
+        if(selectedIndex < songs.length - 1){
+            selectedIndex++;
+        }else{
+            selectedIndex = 0;
+        }
+        playSong(songs[selectedIndex]);
+        showSongs(songs);
+    };
+    if(key.name === "b"){
+        if(selectedIndex > 0){
+            selectedIndex--;
+        }else{
+            selectedIndex = songs.length - 1;
+        };
+        playSong(songs[selectedIndex]);
+        showSongs(songs);
+    }
+    if(key.name ==='p'){
+        
+    }
+})};
