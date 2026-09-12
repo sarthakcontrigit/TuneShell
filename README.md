@@ -106,8 +106,10 @@ Keyboard input is handled via Ink's `useInput` hook.
 4. **Run the player:**
 
    npm start
+   
    # or directly:
-   node tuneshell.js
+   
+   node TuneShell.js
  
 
 ---
@@ -128,13 +130,14 @@ Keyboard input is handled via Ink's `useInput` hook.
 
 ## 📁 Project Structure
 
-```text
-Terminal-Application/
+
+
+TuneShell/
 ├── Songs/              # Place your .mp3 files here
-├── tuneshell.js        # Main application (React Ink UI + audio engine)
+├── TuneShell.js        # Main application (React Ink UI + audio engine)
 ├── package.json        # Project config and dependencies
 └── README.md           # You are here
-```
+
 
 ---
 
