@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { spawn } = require('child_process');
 
 const songDirectory = path.join(__dirname, "Songs");
 const songs = fs.readdirSync(songDirectory).filter(song => song.toLowerCase().endsWith(".mp3"));
@@ -8,6 +9,8 @@ const songs = fs.readdirSync(songDirectory).filter(song => song.toLowerCase().en
 
 let selectedIndex= 0;
 const LIST_SIZE = 10;
+let currentAudioPlaying = null;
+let currentSongPlaying = null;
 
 function showSongs(songs){
         console.clear();
@@ -32,6 +35,17 @@ function showSongs(songs){
     console.log("-------------------------------------------------------");
 };
 
+function playSong(song){
+    if(currentAudioPlaying){
+        currentAudioPlaying.kill();
+    } else{
+        const songPath = path.join(songDirectory, song);
+        currentAudioPlaying = spawn('afplay', [songPath]);
+        currentSongPlaying = song;
+    };
+
+};
+
 
 if(songs.length === 0){
     console.log("No songs in the Songs Directory!");
@@ -47,6 +61,9 @@ process.stdin.resume();
 
 process.stdin.on('keypress', (str, key)=>{
     if((key.ctrl && key.name === "c") || key.name==="q"){
+                if(currentAudioPlaying){
+            currentAudioPlaying.kill();
+        };
         process.exit();
     };
     if(key.name === "up"){
@@ -60,5 +77,9 @@ process.stdin.on('keypress', (str, key)=>{
             selectedIndex++;
             showSongs(songs);
         };
+    };
+        if(key.name === 'return' || key.name === 'enter'){
+        playSong(songs[selectedIndex]);
+        showSongs(songs);
     };
 });
