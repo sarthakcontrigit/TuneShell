@@ -11,6 +11,7 @@ let selectedIndex= 0;
 const LIST_SIZE = 10;
 let currentAudioPlaying = null;
 let currentSongPlaying = null;
+let songPaused = false;
 
 function showSongs(songs){
         console.clear();
@@ -37,11 +38,37 @@ function showSongs(songs){
 
 function playSong(song){
     if(currentAudioPlaying){
-        currentAudioPlaying.kill();
+        currentAudioPlaying.kill("SIGKILL");
     }
     const songPath = path.join(songDirectory, song);
     currentAudioPlaying = spawn('afplay', [songPath]);
     currentSongPlaying = song;
+    songPaused = false;
+
+};
+
+function pauseSong(){
+  if (!currentAudioPlaying){
+    return;
+  };
+  if(songPaused){
+    return;
+  };
+  process.kill(currentAudioPlaying.pid, "SIGSTOP");
+  songPaused = true;
+};
+
+function resumeSong(){
+  if(!currentAudioPlaying){
+    return;
+  };
+  if(!songPaused){
+    return;
+  };
+  process.kill(currentAudioPlaying.pid, "SIGCONT");
+  songPaused = false;
+};
+
 
 
 
@@ -60,7 +87,7 @@ process.stdin.resume();
 process.stdin.on('keypress', (str, key)=>{
     if((key.ctrl && key.name === "c") || key.name==="q"){
                 if(currentAudioPlaying){
-            currentAudioPlaying.kill();
+            currentAudioPlaying.kill("SIGKILL");
         };
         process.exit();
     };
@@ -97,8 +124,15 @@ process.stdin.on('keypress', (str, key)=>{
         };
         playSong(songs[selectedIndex]);
         showSongs(songs);
-    }
+    };
     if(key.name ==='p'){
-        
-    }
-})};
+        if (!currentAudioPlaying) {
+        playSong(songs[selectedIndex]);
+      } else if (songPaused) {
+        resumeSong();
+      } else {
+        pauseSong();
+      }
+      showSongs(songs);  
+    };
+});
